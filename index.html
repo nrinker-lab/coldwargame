@@ -25,7 +25,6 @@
         #generate-btn { font-size: 24px; padding: 20px 40px; border-radius: 8px; background: #f39c12; color: #000; font-weight: bold; border: none; cursor: pointer; margin: 20px 0; transition: transform 0.1s; }
         #generate-btn:active { transform: scale(0.95); }
         
-        /* --- NEW: THE WORLD STAGE VISUAL ARENA --- */
         .world-stage { display: flex; justify-content: space-between; margin: 20px 0; background: #111; border: 2px solid #555; border-radius: 8px; overflow: hidden; height: 180px; }
         .visual-panel { width: 50%; padding: 10px; overflow-y: auto; text-align: left; font-size: 20px; letter-spacing: 2px; line-height: 1.5; }
         .visual-panel-usa { border-right: 2px solid #555; background: rgba(0, 51, 160, 0.1); }
@@ -47,7 +46,6 @@
         .text-green { color: #2ecc71; text-shadow: 1px 1px 3px #000; }
         .text-red { color: #e74c3c; text-shadow: 1px 1px 3px #000; }
 
-        /* Hard Reset Button for Class Changes */
         .reset-btn { margin-top: 30px; background: #444; color: #aaa; border: 1px solid #666; padding: 5px 10px; cursor: pointer; border-radius: 4px; font-size: 12px; }
         .reset-btn:hover { background: #555; color: #fff; }
     </style>
@@ -182,8 +180,8 @@
             </div>
             <div class="upgrade-card" style="grid-column: span 2;">
                 <h4>🕵️ Covert Operations (Spying)</h4>
-                <p>Cost: 100 Power</p>
-                <p style="font-size: 14px;">1/3 chance to steal up to 300. | 1/3 chance nothing happens. | 1/3 chance caught (lose 200).</p>
+                <p>Cost: 5,000 Power</p>
+                <p style="font-size: 14px;">1/3 chance to steal 5% of enemy power. | 1/3 chance nothing happens. | 1/3 chance caught (lose 3% of your power).</p>
                 <button class="spy-btn" onclick="attemptSpying(event)">Deploy Intelligence Agents</button>
             </div>
         </div>
@@ -215,7 +213,6 @@
         const msgLog = document.getElementById('message-log');
         const errorLog = document.getElementById('login-error');
 
-        // Setup Arrays and Objects for the Visual Arena
         const buildingTypes = ['industry', 'propaganda', 'culture', 'intel', 'influence', 'alliances', 'nukes', 'proxy', 'space', 'icbm'];
         const emojis = { industry: '🏭', propaganda: '📻', culture: '🏅', intel: '🗄️', influence: '🤝', alliances: '🛡️', nukes: '☢️', proxy: '⚔️', space: '🚀', icbm: '☄️' };
         
@@ -245,7 +242,6 @@
             let displayColor = myTeam === 'USA' ? '#5dade2' : '#e74c3c';
             document.getElementById('team-display').innerHTML = `<span style="color:${displayColor}">${myTeam}</span>`;
 
-            // LOAD LOCAL STORAGE SAVE
             const savedPassive = localStorage.getItem(`coldWar_passive_${myTeam}`);
             if (savedPassive) {
                 myPassiveGeneration = parseInt(savedPassive);
@@ -265,7 +261,6 @@
                 if (enemyTeam === 'USSR') enemyPower = val;
             });
 
-            // Update building counts and trigger visual render
             buildingTypes.forEach(type => {
                 db.ref(`buildings/USA/${type}`).on('value', snap => {
                     let count = snap.val() || 0;
@@ -288,10 +283,8 @@
             }, 1000);
         }
 
-        // --- VISUAL RENDER FUNCTION ---
         function renderVisuals(team) {
             let html = '';
-            // Cap rendering at 50 per item so the browser doesn't lag if they buy thousands
             for (let type of buildingTypes) {
                 let count = buildingData[team][type];
                 let renderCount = Math.min(count, 50); 
@@ -327,7 +320,6 @@
                 myPassiveGeneration += powerIncrease;
                 document.getElementById('my-passive').innerText = myPassiveGeneration.toLocaleString();
                 
-                // SAVE TO BROWSER LOCAL STORAGE
                 localStorage.setItem(`coldWar_passive_${myTeam}`, myPassiveGeneration);
                 
                 spawnFloatingText(event.clientX, event.clientY, `+${powerIncrease} power / sec`, "text-green");
@@ -338,7 +330,7 @@
         }
 
         function attemptSpying(event) {
-            const spyCost = 100;
+            const spyCost = 5000;
             if (teamPower < spyCost) {
                 spawnFloatingText(event.clientX, event.clientY, "Insufficient Power", "text-red");
                 return;
@@ -351,24 +343,27 @@
             const roll = Math.random(); 
 
             if (roll < 0.333) { 
-                let amountToSteal = Math.min(enemyPower, 300);
+                // Steal 5% of the enemy's total power
+                let amountToSteal = Math.floor(enemyPower * 0.05);
                 db.ref(`scores/${enemyTeam}`).transaction((current) => {
                     return Math.max(0, (current || 0) - amountToSteal);
                 });
                 db.ref(`scores/${myTeam}`).set(firebase.database.ServerValue.increment(amountToSteal));
-                spawnFloatingText(event.clientX, event.clientY, `Stole ${amountToSteal}!`, "text-green");
-                showMessage(`Success! Spies infiltrated and stole ${amountToSteal} power.`);
+                spawnFloatingText(event.clientX, event.clientY, `Stole ${amountToSteal.toLocaleString()}!`, "text-green");
+                showMessage(`Success! Spies infiltrated and stole ${amountToSteal.toLocaleString()} power.`);
             } 
             else if (roll < 0.666) { 
                 spawnFloatingText(event.clientX, event.clientY, "Failed", "text-red");
                 showMessage("Operation stalled. Agents returned with no useful intel.");
             } 
             else { 
+                // Lose 3% of your team's current power
+                let amountToLose = Math.floor(teamPower * 0.03);
                 db.ref(`scores/${myTeam}`).transaction((current) => {
-                    return Math.max(0, (current || 0) - 200);
+                    return Math.max(0, (current || 0) - amountToLose);
                 });
-                spawnFloatingText(event.clientX, event.clientY, "Caught! -200", "text-red");
-                showMessage("DISASTER! Agents were compromised. Lost up to 200 power in the fallout.");
+                spawnFloatingText(event.clientX, event.clientY, `Caught! -${amountToLose.toLocaleString()}`, "text-red");
+                showMessage(`DISASTER! Agents were compromised. Lost ${amountToLose.toLocaleString()} power in the fallout.`);
             }
         }
 
@@ -377,7 +372,6 @@
             setTimeout(() => { msgLog.innerText = ""; }, 4000);
         }
 
-        // Hard Reset for Local Save
         function hardResetLocalSave() {
             if(confirm("Are you sure? Only do this if your teacher has restarted the game for a new class period!")) {
                 localStorage.removeItem(`coldWar_passive_USA`);
