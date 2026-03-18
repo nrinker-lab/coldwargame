@@ -24,6 +24,14 @@
         .ussr-text { color: #e74c3c; }
         #generate-btn { font-size: 24px; padding: 20px 40px; border-radius: 8px; background: #f39c12; color: #000; font-weight: bold; border: none; cursor: pointer; margin: 20px 0; transition: transform 0.1s; }
         #generate-btn:active { transform: scale(0.95); }
+        
+        /* --- NEW: THE WORLD STAGE VISUAL ARENA --- */
+        .world-stage { display: flex; justify-content: space-between; margin: 20px 0; background: #111; border: 2px solid #555; border-radius: 8px; overflow: hidden; height: 180px; }
+        .visual-panel { width: 50%; padding: 10px; overflow-y: auto; text-align: left; font-size: 20px; letter-spacing: 2px; line-height: 1.5; }
+        .visual-panel-usa { border-right: 2px solid #555; background: rgba(0, 51, 160, 0.1); }
+        .visual-panel-ussr { background: rgba(204, 0, 0, 0.1); }
+        .world-stage h3 { margin: 0 0 10px 0; text-align: center; font-size: 16px; border-bottom: 1px solid #555; padding-bottom: 5px; }
+
         .shop { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; text-align: left; }
         .upgrade-card { background: rgba(50, 50, 50, 0.8); padding: 15px; border-radius: 8px; border: 1px solid #666; position: relative; }
         .upgrade-card h4 { margin-top: 0; margin-bottom: 10px; text-align: center; font-size: 18px; }
@@ -38,6 +46,10 @@
         @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-50px); } }
         .text-green { color: #2ecc71; text-shadow: 1px 1px 3px #000; }
         .text-red { color: #e74c3c; text-shadow: 1px 1px 3px #000; }
+
+        /* Hard Reset Button for Class Changes */
+        .reset-btn { margin-top: 30px; background: #444; color: #aaa; border: 1px solid #666; padding: 5px 10px; cursor: pointer; border-radius: 4px; font-size: 12px; }
+        .reset-btn:hover { background: #555; color: #fff; }
     </style>
 </head>
 <body>
@@ -63,6 +75,17 @@
         <div id="personal-stats">Your Terminal's Contribution: <span id="my-passive">0</span> power/sec</div>
         
         <div id="message-log"></div>
+
+        <div class="world-stage">
+            <div class="visual-panel visual-panel-usa">
+                <h3 class="usa-text">UNITED STATES INFRASTRUCTURE</h3>
+                <div id="render-usa"></div>
+            </div>
+            <div class="visual-panel visual-panel-ussr">
+                <h3 class="ussr-text">SOVIET UNION INFRASTRUCTURE</h3>
+                <div id="render-ussr"></div>
+            </div>
+        </div>
 
         <h3>Command Center</h3>
         
@@ -164,6 +187,8 @@
                 <button class="spy-btn" onclick="attemptSpying(event)">Deploy Intelligence Agents</button>
             </div>
         </div>
+        
+        <button class="reset-btn" onclick="hardResetLocalSave()">Clear My Local Save (Use if teacher restarts the game)</button>
     </div>
 
     <script>
@@ -190,7 +215,14 @@
         const msgLog = document.getElementById('message-log');
         const errorLog = document.getElementById('login-error');
 
+        // Setup Arrays and Objects for the Visual Arena
         const buildingTypes = ['industry', 'propaganda', 'culture', 'intel', 'influence', 'alliances', 'nukes', 'proxy', 'space', 'icbm'];
+        const emojis = { industry: '🏭', propaganda: '📻', culture: '🏅', intel: '🗄️', influence: '🤝', alliances: '🛡️', nukes: '☢️', proxy: '⚔️', space: '🚀', icbm: '☄️' };
+        
+        let buildingData = {
+            USA: { industry: 0, propaganda: 0, culture: 0, intel: 0, influence: 0, alliances: 0, nukes: 0, proxy: 0, space: 0, icbm: 0 },
+            USSR: { industry: 0, propaganda: 0, culture: 0, intel: 0, influence: 0, alliances: 0, nukes: 0, proxy: 0, space: 0, icbm: 0 }
+        };
 
         function joinTeam(selectedTeam) {
             const code = document.getElementById('clearance-code').value;
@@ -213,6 +245,13 @@
             let displayColor = myTeam === 'USA' ? '#5dade2' : '#e74c3c';
             document.getElementById('team-display').innerHTML = `<span style="color:${displayColor}">${myTeam}</span>`;
 
+            // LOAD LOCAL STORAGE SAVE
+            const savedPassive = localStorage.getItem(`coldWar_passive_${myTeam}`);
+            if (savedPassive) {
+                myPassiveGeneration = parseInt(savedPassive);
+                document.getElementById('my-passive').innerText = myPassiveGeneration.toLocaleString();
+            }
+
             db.ref('scores/USA').on('value', snap => {
                 let val = snap.val() || 0;
                 scoreUsaEl.innerText = val.toLocaleString();
@@ -226,15 +265,19 @@
                 if (enemyTeam === 'USSR') enemyPower = val;
             });
 
-            // Update building counts for BOTH teams live
+            // Update building counts and trigger visual render
             buildingTypes.forEach(type => {
                 db.ref(`buildings/USA/${type}`).on('value', snap => {
-                    const countEl = document.getElementById(`count-${type}-usa`);
-                    if (countEl) countEl.innerText = snap.val() || 0;
+                    let count = snap.val() || 0;
+                    document.getElementById(`count-${type}-usa`).innerText = count;
+                    buildingData.USA[type] = count;
+                    renderVisuals('USA');
                 });
                 db.ref(`buildings/USSR/${type}`).on('value', snap => {
-                    const countEl = document.getElementById(`count-${type}-ussr`);
-                    if (countEl) countEl.innerText = snap.val() || 0;
+                    let count = snap.val() || 0;
+                    document.getElementById(`count-${type}-ussr`).innerText = count;
+                    buildingData.USSR[type] = count;
+                    renderVisuals('USSR');
                 });
             });
 
@@ -243,6 +286,20 @@
                     db.ref(`scores/${myTeam}`).set(firebase.database.ServerValue.increment(myPassiveGeneration));
                 }
             }, 1000);
+        }
+
+        // --- VISUAL RENDER FUNCTION ---
+        function renderVisuals(team) {
+            let html = '';
+            // Cap rendering at 50 per item so the browser doesn't lag if they buy thousands
+            for (let type of buildingTypes) {
+                let count = buildingData[team][type];
+                let renderCount = Math.min(count, 50); 
+                if (renderCount > 0) {
+                    html += `<span title="${count} ${type}">${emojis[type].repeat(renderCount)}</span>`;
+                }
+            }
+            document.getElementById(`render-${team.toLowerCase()}`).innerHTML = html;
         }
 
         function spawnFloatingText(x, y, text, colorClass) {
@@ -269,6 +326,9 @@
                 
                 myPassiveGeneration += powerIncrease;
                 document.getElementById('my-passive').innerText = myPassiveGeneration.toLocaleString();
+                
+                // SAVE TO BROWSER LOCAL STORAGE
+                localStorage.setItem(`coldWar_passive_${myTeam}`, myPassiveGeneration);
                 
                 spawnFloatingText(event.clientX, event.clientY, `+${powerIncrease} power / sec`, "text-green");
                 showMessage(`Directive Authorized! +${powerIncrease.toLocaleString()} power/sec added.`);
@@ -315,6 +375,15 @@
         function showMessage(msg) {
             msgLog.innerText = msg;
             setTimeout(() => { msgLog.innerText = ""; }, 4000);
+        }
+
+        // Hard Reset for Local Save
+        function hardResetLocalSave() {
+            if(confirm("Are you sure? Only do this if your teacher has restarted the game for a new class period!")) {
+                localStorage.removeItem(`coldWar_passive_USA`);
+                localStorage.removeItem(`coldWar_passive_USSR`);
+                location.reload();
+            }
         }
     </script>
 </body>
