@@ -26,27 +26,16 @@
         #generate-btn:active { transform: scale(0.95); }
         .shop { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; text-align: left; }
         .upgrade-card { background: rgba(50, 50, 50, 0.8); padding: 15px; border-radius: 8px; border: 1px solid #666; position: relative; }
-        .upgrade-card h4 { margin-top: 0; border-bottom: 1px solid #777; padding-bottom: 5px; }
-        .owned-badge { float: right; background: #444; padding: 2px 8px; border-radius: 12px; font-size: 14px; border: 1px solid #888; color: #f1c40f; }
-        .upgrade-card button { background: #2e86c1; color: white; border: none; padding: 10px; cursor: pointer; width: 100%; margin-top: 10px; border-radius: 4px; font-weight: bold; }
+        .upgrade-card h4 { margin-top: 0; margin-bottom: 10px; text-align: center; font-size: 18px; }
+        .owned-badge { display: flex; justify-content: space-between; background: rgba(0,0,0,0.5); padding: 5px 10px; border-radius: 4px; border: 1px solid #444; font-size: 14px; margin-bottom: 10px; }
+        .upgrade-card button { background: #2e86c1; color: white; border: none; padding: 10px; cursor: pointer; width: 100%; margin-top: 5px; border-radius: 4px; font-weight: bold; }
         .upgrade-card button:hover { background: #21618c; }
         .upgrade-card button.spy-btn { background: #8e44ad; }
         .upgrade-card button.spy-btn:hover { background: #6c3483; }
         #message-log { margin-top: 20px; color: #f1c40f; height: 30px; font-weight: bold; font-size: 18px; }
 
-        /* --- NEW: FLOATING TEXT ANIMATIONS --- */
-        .floating-text {
-            position: fixed; /* Fixed to the screen so it tracks the exact mouse click */
-            pointer-events: none; /* So it doesn't block future clicks */
-            font-weight: bold;
-            font-size: 18px;
-            z-index: 1000;
-            animation: floatUp 1.2s ease-out forwards;
-        }
-        @keyframes floatUp {
-            0% { opacity: 1; transform: translateY(0); }
-            100% { opacity: 0; transform: translateY(-50px); }
-        }
+        .floating-text { position: fixed; pointer-events: none; font-weight: bold; font-size: 18px; z-index: 1000; animation: floatUp 1.2s ease-out forwards; }
+        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-50px); } }
         .text-green { color: #2ecc71; text-shadow: 1px 1px 3px #000; }
         .text-red { color: #e74c3c; text-shadow: 1px 1px 3px #000; }
     </style>
@@ -79,52 +68,92 @@
         
         <div class="shop">
             <div class="upgrade-card">
-                <h4>🏭 Build Heavy Industry <span class="owned-badge">Owned: <span id="count-industry">0</span></span></h4>
+                <h4>🏭 Build Heavy Industry</h4>
+                <div class="owned-badge">
+                    <span class="usa-text">USA: <span id="count-industry-usa">0</span></span>
+                    <span class="ussr-text">USSR: <span id="count-industry-ussr">0</span></span>
+                </div>
                 <p>Cost: 50 | Effect: +1 Power/sec</p>
                 <button onclick="buyPassive(event, 'industry', 50, 1)">Authorize Construction</button>
             </div>
             <div class="upgrade-card">
-                <h4>📻 Broadcast Propaganda <span class="owned-badge">Owned: <span id="count-propaganda">0</span></span></h4>
+                <h4>📻 Broadcast Propaganda</h4>
+                <div class="owned-badge">
+                    <span class="usa-text">USA: <span id="count-propaganda-usa">0</span></span>
+                    <span class="ussr-text">USSR: <span id="count-propaganda-ussr">0</span></span>
+                </div>
                 <p>Cost: 150 | Effect: +4 Power/sec</p>
                 <button onclick="buyPassive(event, 'propaganda', 150, 4)">Start Broadcasts</button>
             </div>
             <div class="upgrade-card">
-                <h4>🏅 Cultural Exports <span class="owned-badge">Owned: <span id="count-culture">0</span></span></h4>
+                <h4>🏅 Cultural Exports</h4>
+                <div class="owned-badge">
+                    <span class="usa-text">USA: <span id="count-culture-usa">0</span></span>
+                    <span class="ussr-text">USSR: <span id="count-culture-ussr">0</span></span>
+                </div>
                 <p>Cost: 300 | Effect: +8 Power/sec</p>
                 <button onclick="buyPassive(event, 'culture', 300, 8)">Fund Arts & Olympics</button>
             </div>
             <div class="upgrade-card">
-                <h4>🗄️ Intelligence Agencies <span class="owned-badge">Owned: <span id="count-intel">0</span></span></h4>
+                <h4>🗄️ Intelligence Agencies</h4>
+                <div class="owned-badge">
+                    <span class="usa-text">USA: <span id="count-intel-usa">0</span></span>
+                    <span class="ussr-text">USSR: <span id="count-intel-ussr">0</span></span>
+                </div>
                 <p>Cost: 600 | Effect: +18 Power/sec</p>
                 <button onclick="buyPassive(event, 'intel', 600, 18)">Expand CIA / KGB</button>
             </div>
             <div class="upgrade-card">
-                <h4>🤝 Influence Unaligned Nations <span class="owned-badge">Owned: <span id="count-influence">0</span></span></h4>
+                <h4>🤝 Influence Unaligned Nations</h4>
+                <div class="owned-badge">
+                    <span class="usa-text">USA: <span id="count-influence-usa">0</span></span>
+                    <span class="ussr-text">USSR: <span id="count-influence-ussr">0</span></span>
+                </div>
                 <p>Cost: 1,200 | Effect: +38 Power/sec</p>
                 <button onclick="buyPassive(event, 'influence', 1200, 38)">Send Foreign Aid</button>
             </div>
             <div class="upgrade-card">
-                <h4>🛡️ Military Alliances <span class="owned-badge">Owned: <span id="count-alliances">0</span></span></h4>
+                <h4>🛡️ Military Alliances</h4>
+                <div class="owned-badge">
+                    <span class="usa-text">USA: <span id="count-alliances-usa">0</span></span>
+                    <span class="ussr-text">USSR: <span id="count-alliances-ussr">0</span></span>
+                </div>
                 <p>Cost: 2,500 | Effect: +85 Power/sec</p>
                 <button onclick="buyPassive(event, 'alliances', 2500, 85)">Establish Pacts</button>
             </div>
             <div class="upgrade-card">
-                <h4>☢️ Nuclear Deterrence <span class="owned-badge">Owned: <span id="count-nukes">0</span></span></h4>
+                <h4>☢️ Nuclear Deterrence</h4>
+                <div class="owned-badge">
+                    <span class="usa-text">USA: <span id="count-nukes-usa">0</span></span>
+                    <span class="ussr-text">USSR: <span id="count-nukes-ussr">0</span></span>
+                </div>
                 <p>Cost: 5,000 | Effect: +180 Power/sec</p>
                 <button onclick="buyPassive(event, 'nukes', 5000, 180)">Stockpile Warheads</button>
             </div>
             <div class="upgrade-card">
-                <h4>⚔️ Fund Proxy Wars <span class="owned-badge">Owned: <span id="count-proxy">0</span></span></h4>
+                <h4>⚔️ Fund Proxy Wars</h4>
+                <div class="owned-badge">
+                    <span class="usa-text">USA: <span id="count-proxy-usa">0</span></span>
+                    <span class="ussr-text">USSR: <span id="count-proxy-ussr">0</span></span>
+                </div>
                 <p>Cost: 12,000 | Effect: +450 Power/sec</p>
                 <button onclick="buyPassive(event, 'proxy', 12000, 450)">Supply Weapons</button>
             </div>
             <div class="upgrade-card">
-                <h4>🚀 The Space Race <span class="owned-badge">Owned: <span id="count-space">0</span></span></h4>
+                <h4>🚀 The Space Race</h4>
+                <div class="owned-badge">
+                    <span class="usa-text">USA: <span id="count-space-usa">0</span></span>
+                    <span class="ussr-text">USSR: <span id="count-space-ussr">0</span></span>
+                </div>
                 <p>Cost: 30,000 | Effect: +1,200 Power/sec</p>
                 <button onclick="buyPassive(event, 'space', 30000, 1200)">Fund Aerospace</button>
             </div>
             <div class="upgrade-card">
-                <h4>☄️ Develop ICBMs <span class="owned-badge">Owned: <span id="count-icbm">0</span></span></h4>
+                <h4>☄️ Develop ICBMs</h4>
+                <div class="owned-badge">
+                    <span class="usa-text">USA: <span id="count-icbm-usa">0</span></span>
+                    <span class="ussr-text">USSR: <span id="count-icbm-ussr">0</span></span>
+                </div>
                 <p>Cost: 75,000 | Effect: +3,500 Power/sec</p>
                 <button onclick="buyPassive(event, 'icbm', 75000, 3500)">Build Missile Silos</button>
             </div>
@@ -197,9 +226,14 @@
                 if (enemyTeam === 'USSR') enemyPower = val;
             });
 
+            // Update building counts for BOTH teams live
             buildingTypes.forEach(type => {
-                db.ref(`buildings/${myTeam}/${type}`).on('value', snap => {
-                    const countEl = document.getElementById(`count-${type}`);
+                db.ref(`buildings/USA/${type}`).on('value', snap => {
+                    const countEl = document.getElementById(`count-${type}-usa`);
+                    if (countEl) countEl.innerText = snap.val() || 0;
+                });
+                db.ref(`buildings/USSR/${type}`).on('value', snap => {
+                    const countEl = document.getElementById(`count-${type}-ussr`);
                     if (countEl) countEl.innerText = snap.val() || 0;
                 });
             });
@@ -211,17 +245,13 @@
             }, 1000);
         }
 
-        // --- NEW: Function to generate the visual text ---
         function spawnFloatingText(x, y, text, colorClass) {
             const el = document.createElement('div');
             el.innerText = text;
             el.className = `floating-text ${colorClass}`;
-            // Offset the text slightly so it appears right next to the cursor
             el.style.left = `${x + 10}px`;
             el.style.top = `${y - 10}px`;
             document.body.appendChild(el);
-            
-            // Remove the element from HTML after the CSS animation finishes (1.2 seconds)
             setTimeout(() => { el.remove(); }, 1200);
         }
 
@@ -240,11 +270,9 @@
                 myPassiveGeneration += powerIncrease;
                 document.getElementById('my-passive').innerText = myPassiveGeneration.toLocaleString();
                 
-                // Spawn the successful green text
                 spawnFloatingText(event.clientX, event.clientY, `+${powerIncrease} power / sec`, "text-green");
                 showMessage(`Directive Authorized! +${powerIncrease.toLocaleString()} power/sec added.`);
             } else {
-                // Spawn the failing red text
                 spawnFloatingText(event.clientX, event.clientY, "Insufficient Power", "text-red");
             }
         }
