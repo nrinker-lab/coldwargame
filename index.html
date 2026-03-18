@@ -33,6 +33,22 @@
         .upgrade-card button.spy-btn { background: #8e44ad; }
         .upgrade-card button.spy-btn:hover { background: #6c3483; }
         #message-log { margin-top: 20px; color: #f1c40f; height: 30px; font-weight: bold; font-size: 18px; }
+
+        /* --- NEW: FLOATING TEXT ANIMATIONS --- */
+        .floating-text {
+            position: fixed; /* Fixed to the screen so it tracks the exact mouse click */
+            pointer-events: none; /* So it doesn't block future clicks */
+            font-weight: bold;
+            font-size: 18px;
+            z-index: 1000;
+            animation: floatUp 1.2s ease-out forwards;
+        }
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-50px); }
+        }
+        .text-green { color: #2ecc71; text-shadow: 1px 1px 3px #000; }
+        .text-red { color: #e74c3c; text-shadow: 1px 1px 3px #000; }
     </style>
 </head>
 <body>
@@ -54,7 +70,7 @@
             <div class="score-box ussr-text">USSR Power: <br><span id="score-ussr">0</span></div>
         </div>
 
-        <button id="generate-btn" onclick="generatePower()">GENERATE POWER</button>
+        <button id="generate-btn" onclick="generatePower(event)">GENERATE POWER</button>
         <div id="personal-stats">Your Terminal's Contribution: <span id="my-passive">0</span> power/sec</div>
         
         <div id="message-log"></div>
@@ -65,58 +81,58 @@
             <div class="upgrade-card">
                 <h4>🏭 Build Heavy Industry <span class="owned-badge">Owned: <span id="count-industry">0</span></span></h4>
                 <p>Cost: 50 | Effect: +1 Power/sec</p>
-                <button onclick="buyPassive('industry', 50, 1)">Authorize Construction</button>
+                <button onclick="buyPassive(event, 'industry', 50, 1)">Authorize Construction</button>
             </div>
             <div class="upgrade-card">
                 <h4>📻 Broadcast Propaganda <span class="owned-badge">Owned: <span id="count-propaganda">0</span></span></h4>
                 <p>Cost: 150 | Effect: +4 Power/sec</p>
-                <button onclick="buyPassive('propaganda', 150, 4)">Start Broadcasts</button>
+                <button onclick="buyPassive(event, 'propaganda', 150, 4)">Start Broadcasts</button>
             </div>
             <div class="upgrade-card">
                 <h4>🏅 Cultural Exports <span class="owned-badge">Owned: <span id="count-culture">0</span></span></h4>
                 <p>Cost: 300 | Effect: +8 Power/sec</p>
-                <button onclick="buyPassive('culture', 300, 8)">Fund Arts & Olympics</button>
+                <button onclick="buyPassive(event, 'culture', 300, 8)">Fund Arts & Olympics</button>
             </div>
             <div class="upgrade-card">
                 <h4>🗄️ Intelligence Agencies <span class="owned-badge">Owned: <span id="count-intel">0</span></span></h4>
                 <p>Cost: 600 | Effect: +18 Power/sec</p>
-                <button onclick="buyPassive('intel', 600, 18)">Expand CIA / KGB</button>
+                <button onclick="buyPassive(event, 'intel', 600, 18)">Expand CIA / KGB</button>
             </div>
             <div class="upgrade-card">
                 <h4>🤝 Influence Unaligned Nations <span class="owned-badge">Owned: <span id="count-influence">0</span></span></h4>
                 <p>Cost: 1,200 | Effect: +38 Power/sec</p>
-                <button onclick="buyPassive('influence', 1200, 38)">Send Foreign Aid</button>
+                <button onclick="buyPassive(event, 'influence', 1200, 38)">Send Foreign Aid</button>
             </div>
             <div class="upgrade-card">
                 <h4>🛡️ Military Alliances <span class="owned-badge">Owned: <span id="count-alliances">0</span></span></h4>
                 <p>Cost: 2,500 | Effect: +85 Power/sec</p>
-                <button onclick="buyPassive('alliances', 2500, 85)">Establish Pacts</button>
+                <button onclick="buyPassive(event, 'alliances', 2500, 85)">Establish Pacts</button>
             </div>
             <div class="upgrade-card">
                 <h4>☢️ Nuclear Deterrence <span class="owned-badge">Owned: <span id="count-nukes">0</span></span></h4>
                 <p>Cost: 5,000 | Effect: +180 Power/sec</p>
-                <button onclick="buyPassive('nukes', 5000, 180)">Stockpile Warheads</button>
+                <button onclick="buyPassive(event, 'nukes', 5000, 180)">Stockpile Warheads</button>
             </div>
             <div class="upgrade-card">
                 <h4>⚔️ Fund Proxy Wars <span class="owned-badge">Owned: <span id="count-proxy">0</span></span></h4>
                 <p>Cost: 12,000 | Effect: +450 Power/sec</p>
-                <button onclick="buyPassive('proxy', 12000, 450)">Supply Weapons</button>
+                <button onclick="buyPassive(event, 'proxy', 12000, 450)">Supply Weapons</button>
             </div>
             <div class="upgrade-card">
                 <h4>🚀 The Space Race <span class="owned-badge">Owned: <span id="count-space">0</span></span></h4>
                 <p>Cost: 30,000 | Effect: +1,200 Power/sec</p>
-                <button onclick="buyPassive('space', 30000, 1200)">Fund Aerospace</button>
+                <button onclick="buyPassive(event, 'space', 30000, 1200)">Fund Aerospace</button>
             </div>
             <div class="upgrade-card">
                 <h4>☄️ Develop ICBMs <span class="owned-badge">Owned: <span id="count-icbm">0</span></span></h4>
                 <p>Cost: 75,000 | Effect: +3,500 Power/sec</p>
-                <button onclick="buyPassive('icbm', 75000, 3500)">Build Missile Silos</button>
+                <button onclick="buyPassive(event, 'icbm', 75000, 3500)">Build Missile Silos</button>
             </div>
             <div class="upgrade-card" style="grid-column: span 2;">
                 <h4>🕵️ Covert Operations (Spying)</h4>
                 <p>Cost: 100 Power</p>
                 <p style="font-size: 14px;">1/3 chance to steal up to 300. | 1/3 chance nothing happens. | 1/3 chance caught (lose 200).</p>
-                <button class="spy-btn" onclick="attemptSpying()">Deploy Intelligence Agents</button>
+                <button class="spy-btn" onclick="attemptSpying(event)">Deploy Intelligence Agents</button>
             </div>
         </div>
     </div>
@@ -145,13 +161,11 @@
         const msgLog = document.getElementById('message-log');
         const errorLog = document.getElementById('login-error');
 
-        // Array of all upgrade IDs to easily loop through them
         const buildingTypes = ['industry', 'propaganda', 'culture', 'intel', 'influence', 'alliances', 'nukes', 'proxy', 'space', 'icbm'];
 
         function joinTeam(selectedTeam) {
             const code = document.getElementById('clearance-code').value;
             
-            // Password Verification
             if (selectedTeam === 'USA' && code !== 'Capi7ali$m') {
                 errorLog.innerText = "ACCESS DENIED: Incorrect US Clearance Code.";
                 return;
@@ -170,7 +184,6 @@
             let displayColor = myTeam === 'USA' ? '#5dade2' : '#e74c3c';
             document.getElementById('team-display').innerHTML = `<span style="color:${displayColor}">${myTeam}</span>`;
 
-            // Listen for live database score updates
             db.ref('scores/USA').on('value', snap => {
                 let val = snap.val() || 0;
                 scoreUsaEl.innerText = val.toLocaleString();
@@ -184,7 +197,6 @@
                 if (enemyTeam === 'USSR') enemyPower = val;
             });
 
-            // Listen for live database building counts
             buildingTypes.forEach(type => {
                 db.ref(`buildings/${myTeam}/${type}`).on('value', snap => {
                     const countEl = document.getElementById(`count-${type}`);
@@ -192,7 +204,6 @@
                 });
             });
 
-            // 1-second interval to send passive power to the database
             setInterval(() => {
                 if (myPassiveGeneration > 0) {
                     db.ref(`scores/${myTeam}`).set(firebase.database.ServerValue.increment(myPassiveGeneration));
@@ -200,35 +211,51 @@
             }, 1000);
         }
 
-        function generatePower() {
-            db.ref(`scores/${myTeam}`).set(firebase.database.ServerValue.increment(1));
+        // --- NEW: Function to generate the visual text ---
+        function spawnFloatingText(x, y, text, colorClass) {
+            const el = document.createElement('div');
+            el.innerText = text;
+            el.className = `floating-text ${colorClass}`;
+            // Offset the text slightly so it appears right next to the cursor
+            el.style.left = `${x + 10}px`;
+            el.style.top = `${y - 10}px`;
+            document.body.appendChild(el);
+            
+            // Remove the element from HTML after the CSS animation finishes (1.2 seconds)
+            setTimeout(() => { el.remove(); }, 1200);
         }
 
-        function buyPassive(type, cost, powerIncrease) {
+        function generatePower(event) {
+            db.ref(`scores/${myTeam}`).set(firebase.database.ServerValue.increment(1));
+            spawnFloatingText(event.clientX, event.clientY, "+1 Power", "text-green");
+        }
+
+        function buyPassive(event, type, cost, powerIncrease) {
             if (teamPower >= cost) {
-                // Deduct cost
                 db.ref(`scores/${myTeam}`).transaction((current) => {
                     return Math.max(0, (current || 0) - cost);
                 });
-                // Increment team building count
                 db.ref(`buildings/${myTeam}/${type}`).set(firebase.database.ServerValue.increment(1));
                 
                 myPassiveGeneration += powerIncrease;
                 document.getElementById('my-passive').innerText = myPassiveGeneration.toLocaleString();
+                
+                // Spawn the successful green text
+                spawnFloatingText(event.clientX, event.clientY, `+${powerIncrease} power / sec`, "text-green");
                 showMessage(`Directive Authorized! +${powerIncrease.toLocaleString()} power/sec added.`);
             } else {
-                showMessage("Insufficient Team Power!");
+                // Spawn the failing red text
+                spawnFloatingText(event.clientX, event.clientY, "Insufficient Power", "text-red");
             }
         }
 
-        function attemptSpying() {
+        function attemptSpying(event) {
             const spyCost = 100;
             if (teamPower < spyCost) {
-                showMessage("Insufficient Power to deploy spies!");
+                spawnFloatingText(event.clientX, event.clientY, "Insufficient Power", "text-red");
                 return;
             }
 
-            // Pay the upfront cost
             db.ref(`scores/${myTeam}`).transaction((current) => {
                 return Math.max(0, (current || 0) - spyCost);
             });
@@ -236,23 +263,23 @@
             const roll = Math.random(); 
 
             if (roll < 0.333) { 
-                // Steal up to 300, without pushing enemy below zero
                 let amountToSteal = Math.min(enemyPower, 300);
-                
                 db.ref(`scores/${enemyTeam}`).transaction((current) => {
                     return Math.max(0, (current || 0) - amountToSteal);
                 });
                 db.ref(`scores/${myTeam}`).set(firebase.database.ServerValue.increment(amountToSteal));
+                spawnFloatingText(event.clientX, event.clientY, `Stole ${amountToSteal}!`, "text-green");
                 showMessage(`Success! Spies infiltrated and stole ${amountToSteal} power.`);
             } 
             else if (roll < 0.666) { 
+                spawnFloatingText(event.clientX, event.clientY, "Failed", "text-red");
                 showMessage("Operation stalled. Agents returned with no useful intel.");
             } 
             else { 
-                // Caught! Lose 200, without pushing us below zero
                 db.ref(`scores/${myTeam}`).transaction((current) => {
                     return Math.max(0, (current || 0) - 200);
                 });
+                spawnFloatingText(event.clientX, event.clientY, "Caught! -200", "text-red");
                 showMessage("DISASTER! Agents were compromised. Lost up to 200 power in the fallout.");
             }
         }
