@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cold War: Power Struggle</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <style>
+        body { font-family: 'Courier New', Courier, monospace; background-color: #121212; color: #fff; text-align: center; margin: 0; padding: 20px; }
+        .hidden { display: none !important; }
+        .container { max-width: 800px; margin: auto; padding: 20px; background: #1e1e1e; border: 2px solid #444; border-radius: 8px; }
+        .team-select button { font-size: 20px; padding: 15px 30px; margin: 10px; cursor: pointer; border: none; border-radius: 5px; color: white; font-weight: bold; }
+        #btn-usa { background-color: #0033a0; }
+        #btn-ussr { background-color: #cc0000; }
+        .scoreboard { display: flex; justify-content: space-around; margin: 20px 0; padding: 20px; background: #2a2a2a; border-radius: 8px; }
+        .score-box { font-size: 24px; font-weight: bold; }
+        .usa-text { color: #5dade2; }
+        .ussr-text { color: #e74c3c; }
+        #generate-btn { font-size: 30px; padding: 30px; border-radius: 50%; background: #f39c12; color: #000; border: none; cursor: pointer; margin: 20px 0; transition: transform 0.1s; }
+        #generate-btn:active { transform: scale(0.95); }
+        .shop { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
+        .upgrade-card { background: #333; padding: 15px; border-radius: 8px; border: 1px solid #555; }
+        .upgrade-card button { background: #4CAF50; color: white; border: none; padding: 10px; cursor: pointer; width: 100%; margin-top: 10px; border-radius: 4px; }
+        .upgrade-card button.spy-btn { background: #8e44ad; }
+        #message-log { margin-top: 20px; color: #f1c40f; height: 30px; }
+    </style>
+</head>
+<body>
+
+    <div id="login-screen" class="container team-select">
+        <h2>COLD WAR: POWER STRUGGLE</h2>
+        <p>Select your allegiance to join the shared pool.</p>
+        <button id="btn-usa" onclick="joinTeam('USA')">Join United States</button>
+        <button id="btn-ussr" onclick="joinTeam('USSR')">Join Soviet Union</button>
+    </div>
+
+    <div id="game-screen" class="container hidden">
+        <h2>Playing as: <span id="team-display"></span></h2>
+        
+        <div class="scoreboard">
+            <div class="score-box usa-text">USA Power: <br><span id="score-usa">0</span></div>
+            <div class="score-box ussr-text">USSR Power: <br><span id="score-ussr">0</span></div>
+        </div>
+
+        <button id="generate-btn" onclick="generatePower()">⚡ GENERATE POWER</button>
+        <div id="personal-stats">Your passive contribution: <span id="my-passive">0</span> power/sec</div>
+        
+        <div id="message-log"></div>
+
+        <h3>Command Center</h3>
+        <p><i>Spending power pulls from your team's shared pool!</i></p>
+        
+        <div class="shop">
+            <div class="upgrade-card">
+                <h4>🏭 Industry</h4>
+                <p>Cost: <span id="cost-industry">50</span> Power</p>
+                <p>Effect: You generate +1 Power/sec</p>
+                <button onclick="buyPassive('industry', 50, 1)">Buy Industry</button>
+            </div>
+            <div class="upgrade-card">
+                <h4>🚀 Space Race</h4>
+                <p>Cost: <span id="cost-space">200</span> Power</p>
+                <p>Effect: You generate +5 Power/sec</p>
+                <button onclick="buyPassive('space', 200, 5)">Fund Space Program</button>
+            </div>
+            <div class="upgrade-card">
+                <h4>💣 Arms Race</h4>
+                <p>Cost: <span id="cost-arms">500</span> Power</p>
+                <p>Effect: You generate +15 Power/sec</p>
+                <button onclick="buyPassive('arms', 500, 15)">Build Military</button>
+            </div>
+            <div class="upgrade-card">
+                <h4>🕵️ Espionage (Sabotage)</h4>
+                <p>Cost: 100 Power</p>
+                <p>Effect: 60% chance to steal 300 power. 40% chance to get caught (lose 100).</p>
+                <button class="spy-btn" onclick="attemptSpying()">Deploy Spies</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. FIREBASE SETUP ---
+        // YOU MUST REPLACE THIS CONFIG WITH YOUR OWN FIREBASE DETAILS LATER!
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT_ID.appspot.com",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // --- 2. GAME VARIABLES ---
+        let myTeam = "";
+        let enemyTeam = "";
+        let myPassiveGeneration = 0; // Stored locally, but pushed to DB globally
+        let teamPower = 0; 
+        
+        const scoreUsaEl = document.getElementById('score-usa');
+        const scoreUssrEl = document.getElementById('score-ussr');
+        const msgLog = document.getElementById('message-log');
+
+        // --- 3. CORE LOGIC ---
+        function joinTeam(selectedTeam) {
+            myTeam = selectedTeam;
+            enemyTeam = (selectedTeam === 'USA') ? 'USSR' : 'USA';
+            
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+            
+            let displayColor = myTeam === 'USA' ? '#5dade2' : '#e74c3c';
+            document.getElementById('team-display').innerHTML = `<span style="color:${displayColor}">${myTeam}</span>`;
+
+            // Listen for live score updates from the database
+            db.ref('scores/USA').on('value', snap => {
+                scoreUsaEl.innerText = snap.val() || 0;
+                if (myTeam === 'USA') teamPower = snap.val() || 0;
+            });
+            db.ref('scores/USSR').on('value', snap => {
+                scoreUssrEl.innerText = snap.val() || 0;
+                if (myTeam === 'USSR') teamPower = snap.val() || 0;
+            });
+
+            // Start passive generation loop (runs every 1 second)
+            setInterval(() => {
+                if (myPassiveGeneration > 0) {
+                    db.ref(`scores/${myTeam}`).set(firebase.database.ServerValue.increment(myPassiveGeneration));
+                }
+            }, 1000);
+        }
+
+        function generatePower() {
+            // Clicking simply adds 1 to your team's database score
+            db.ref(`scores/${myTeam}`).set(firebase.database.ServerValue.increment(1));
+        }
+
+        function buyPassive(type, cost, powerIncrease) {
+            if (teamPower >= cost) {
+                // Deduct cost from team pool
+                db.ref(`scores/${myTeam}`).set(firebase.database.ServerValue.increment(-cost));
+                // Add to this student's personal passive generation
+                myPassiveGeneration += powerIncrease;
+                document.getElementById('my-passive').innerText = myPassiveGeneration;
+                showMessage(`Purchased! Your computer now generates +${myPassiveGeneration} power/sec.`);
+            } else {
+                showMessage("Not enough Team Power!");
+            }
+        }
+
+        function attemptSpying() {
+            const spyCost = 100;
+            const stealAmount = 300;
+            const failPenalty = 100;
+
+            if (teamPower < spyCost) {
+                showMessage("Not enough Team Power to deploy spies!");
+                return;
+            }
+
+            // Pay the upfront cost
+            db.ref(`scores/${myTeam}`).set(firebase.database.ServerValue.increment(-spyCost));
+
+            const successChance = Math.random(); // Generates a number between 0 and 1
+
+            if (successChance > 0.40) { // 60% chance of success
+                // Steal from enemy, give to us
+                db.ref(`scores/${enemyTeam}`).set(firebase.database.ServerValue.increment(-stealAmount));
+                db.ref(`scores/${myTeam}`).set(firebase.database.ServerValue.increment(stealAmount));
+                showMessage("Spies successful! Stole 300 power.");
+            } else { // 40% chance of failure
+                // We lose extra points
+                db.ref(`scores/${myTeam}`).set(firebase.database.ServerValue.increment(-failPenalty));
+                showMessage("Spies caught! Mission failed, lost 100 power.");
+            }
+        }
+
+        function showMessage(msg) {
+            msgLog.innerText = msg;
+            setTimeout(() => { msgLog.innerText = ""; }, 3000);
+        }
+    </script>
+</body>
+</html>
